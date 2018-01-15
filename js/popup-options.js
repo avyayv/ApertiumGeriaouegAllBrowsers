@@ -145,7 +145,8 @@ function download_languages() {
     var apertium_api_uri = browser.storage.sync.get('apertiumapiuri')
     apertium_api_uri.then((res) => {
       if (res.apertiumapiuri) {
-          download_langs_with_uri(apertium_api_uri)
+          console.log(res.apertiumapiuri)
+          download_langs_with_uri(res.apertiumapiuri)
       } else {
           download_langs_with_uri("http://apy.projectjj.com/")
       }

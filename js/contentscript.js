@@ -365,7 +365,7 @@ chrome.runtime.onMessage.addListener(function(request){
            var current = elements[i];
            var children = current.childNodes;
            if(isAlphanumeric(current.textContent)){
-             translates(current.textContent, (res_one.fromlang+"|"+res.tolang), current, children, 'https://www.apertium.org/apy/')
+             translates(current.textContent, (res_one.fromlang+"|"+res.tolang), current, children, res_two.apertiumapiuri)
            }
          }
       })
