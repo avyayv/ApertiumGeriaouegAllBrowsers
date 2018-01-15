@@ -7,34 +7,39 @@ function save_options() {
     var fr_lang = $("#from-lang").val()
     var to_lang = $("#to-lang").val()
     if((fr_lang != "emptylang") && (to_lang != "emptylang")){
-        // chrome.storage.sync.set({'fr-lang': fr_lang, 'to-lang': to_lang}, function() {
-        //     alert_msg = "Success! Reload pages for changes to take effect."
-        //     $("#to-lang option[value='emptylang']").remove();
-        //     $("#from-lang option[value='emptylang']").remove();
-        //
-        // });
-        browser.storage.sync.set({fr-lang: fr_lang, to-lang: to_lang}}
+        browser.storage.sync.set({
+          fromlang: fr_lang
+        });
+
+        browser.storage.sync.set({
+          tolang : to_lang
+        });
+
         alert_msg = "Success! Reload pages for changes to take effect."
         $("#to-lang option[value='emptylang']").remove();
         $("#from-lang option[value='emptylang']").remove();
+
 
     }
 }
 
 function restore_options() {
-    chrome.storage.sync.get(["fr-lang", "to-lang"], function(items) {
-        console.log(items["fr-lang"])
-        if (items["fr-lang"] && items["to-lang"]) {
-            $("#from-lang").val(items["fr-lang"])
+    var fr_lang = browser.storage.sync.get('fromlang')
+    var to_lang = browser.storage.sync.get('tolang')
+    to_lang.then((res) => {
+      fr_lang.then((res_two)=> {
+        if (fr_lang && to_lang) {
+            $("#from-lang").val(res_two.fromlang)
             update_selectboxes()
-            $("#to-lang").val(items["to-lang"])
+            $("#to-lang").val(res.tolang)
         } else {
             $("#from-lang").prepend("<option value=\"emptylang\"></option>")
             $("#from-lang").val("emptylang")
             $("#to-lang").prepend("<option value=\"emptylang\"></option>")
             $("#to-lang").val("emptylang")
         }
-    });
+      })
+    })
 }
 
 function download_langs_with_uri(api_uri) {
@@ -137,70 +142,82 @@ function download_langs_with_uri(api_uri) {
 
 
 function download_languages() {
-    chrome.storage.sync.get("apertium-api-url", function(items) {
-        if (items["apertium-api-url"]) {
-            download_langs_with_uri(items["apertium-api-url"])
-        } else {
-            download_langs_with_uri("http://apy.projectjj.com/")
-        }
-    });
+    var apertium_api_uri = browser.storage.sync.get('apertiumapiuri')
+    apertium_api_uri.then((res) => {
+      if (res.apertiumapiuri) {
+          download_langs_with_uri(apertium_api_uri)
+      } else {
+          download_langs_with_uri("http://apy.projectjj.com/")
+      }
+    })
+
 }
 
 function enable_disable(str) {
   if(str == "enable-button"){
-    chrome.storage.sync.get("apertium-enabled", function(items) {
-        if(items["apertium-enabled"] == "On") {
-            $("#"+str).html("Off")
-            chrome.storage.sync.set({'apertium-enabled': $("#"+str).html()}, function() {
-            });
-        } else {
-            $("#"+str).html("On")
-            chrome.storage.sync.set({'apertium-enabled': $("#"+str).html()}, function() {
-            });
-        }
-    });
+    var apertium_enabled = browser.storage.sync.get('apertiumenabled')
+
+
+    apertium_enabled.then((res)=>{
+      if(res.apertiumenabled == "On") {
+          $("#"+str).html("Off")
+          browser.storage.sync.set(
+            {apertiumenabled: $("#"+str).html()}
+          )
+      } else {
+          $("#"+str).html("On")
+          browser.storage.sync.set(
+            {aperiumenabled: $("#"+str).html()}
+          );
+      }
+    })
+
+    // });
   }else{
-    chrome.storage.sync.get("page-translation-enabled", function(items) {
-        if(items["page-translation-enabled"] == "On") {
-            $("#"+str).html("Off")
-            chrome.storage.sync.set({'page-translation-enabled': $("#"+str).html()}, function() {
-            });
-        } else {
-            $("#"+str).html("On")
-            chrome.storage.sync.set({'page-translation-enabled': $("#"+str).html()}, function() {
-            });
-        }
-    });
+    var apertium_api_uri = browser.storage.sync.get("pagetranslationenabled")
+    apertium_api_uri.then((res) => {
+      if(res.pagetranslationenabled == "On") {
+          $("#"+str).html("Off")
+          browser.storage.sync.set({pagetranslationenabled: $("#"+str).html()}
+          );
+      } else {
+          $("#"+str).html("On")
+          browser.storage.sync.set({pagetranslationenabled: $("#"+str).html()}
+          );
+      }
+    })
   }
 }
 
 function set_btn_txt(str) {
     if(str == "enable-button"){
-      chrome.storage.sync.get("apertium-enabled", function(items) {
-          if(items["apertium-enabled"]) {
-              $("#"+str).html(items["apertium-enabled"])
-          } else {
-              $("#"+str).html("Off")
-              chrome.storage.sync.set({'apertium-enabled': $("#"+str).html()}, function() {
-              });
-          }
-          if ($("#"+str).html() == "On") {
-              $("#"+str).addClass('active')
-          }
-      });
+      var apertium_enabled = browser.storage.sync.get('apertiumenabled');
+      apertium_enabled.then((res)=> {
+        if(res.apertiumenabled) {
+            $("#"+str).html(res.apertiumenabled)
+        } else {
+            $("#"+str).html("Off")
+            browser.storage.sync.set({apertiumenabled: $("#"+str).html()});
+        }
+        if ($("#"+str).html() == "On") {
+            $("#"+str).addClass('active')
+        }
+      })
+
     }else{
-      chrome.storage.sync.get("page-translation-enabled", function(items) {
-          if(items["page-translation-enabled"]) {
-              $("#"+str).html(items["page-translation-enabled"])
-          } else {
-              $("#"+str).html("Off")
-              chrome.storage.sync.set({'page-translation-enabled': $("#"+str).html()}, function() {
-              });
-          }
-          if ($("#"+str).html() == "On") {
-              $("#"+str).addClass('active')
-          }
-      });
+      var page_translation_enabled = browser.storage.sync.get("pagetranslationenabled")
+      page_translation_enabled.then((res) => {
+        if(res.pagetranslationenabled) {
+            $("#"+str).html(res)
+        } else {
+            $("#"+str).html("Off")
+            browser.storage.sync.set({pagetranslationenabled: $("#"+str).html()});
+        }
+        if ($("#"+str).html() == "On") {
+            $("#"+str).addClass('active')
+        }
+      })
+
     }
 }
 
@@ -221,6 +238,7 @@ function update_selectboxes() {
     }
 }
 
+
 $("#from-lang").change(function() {
 
     update_selectboxes()
@@ -234,8 +252,40 @@ $("#to-lang").change(function() {
 $("#enable-button").click( function() {
   enable_disable("enable-button")
 });
+function handleResponse(message) {
+  console.log(`Message from the background script:  ${message.response}`);
+}
 
+function handleError(error) {
+  console.log(error);
+}
 
+// $("#translate-page-button").click(function () {
+//
+//   page_translation_enabled.then((res) => {
+//     browser.runtime.sendMessage({"greeting": e.target.href});
+//     var sending = browser.runtime.sendMessage({
+//       greeting: $("#translate-page-button").html()
+//     });
+//     var sending_two = browser.runtime.sendMessage({
+//       greeting: res.pagetranslationenabled
+//     });
+//   })
+// });
+$("#translate-page-button").click(function () {
+  var page_translation_enabled = browser.storage.sync.get("pagetranslationenabled")
+  page_translation_enabled.then((res) => {
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, {greeting: $("#translate-page-button").html()}, function(response) {
+        });
+    });
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, {greeting: res.pagetranslationenabled}, function(response) {
+
+        });
+    });
+  })
+});
 
 
 $(document).ready(function() {

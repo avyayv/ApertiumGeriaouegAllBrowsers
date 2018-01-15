@@ -312,15 +312,13 @@ function shouldShow(string) {
     return XRegExp.test(string.trim(), XRegExp("\\p{L}"))
 }
 
-
-
 function translates(word, lang_pair, textContent, children, url){
-  try{
+
+  try {
     var reqUrl = encodeSemicolon(URI.decode(URI(url) + URI("translate").addQuery("langpair",lang_pair).addQuery("q",word)))
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", encodeURI(reqUrl), true);
-    xmlHttp.send(null)
-    xmlHttp.onload = function (e) {
+
+    xmlHttp.onreadystatechange = function (e) {
       if (xmlHttp.readyState === 4) {
         if (xmlHttp.status === 200) {
           var lang_arr = JSON.parse(xmlHttp.responseText);
@@ -328,26 +326,37 @@ function translates(word, lang_pair, textContent, children, url){
         } else {
           console.error(xmlHttp.statusText);
         }
-        }
+      }
     };
-  }catch(DOMException){
+
+    xmlHttp.open("GET", encodeURI(reqUrl), true);
+
+    xmlHttp.send()
+
+  } catch(e){
+    console.log(e)
   }
 }
 
 
 
 chrome.runtime.onMessage.addListener(function(request){
-  chrome.storage.sync.get(["apertium-api-url","fr-lang","to-lang"], function(items) {
-    if(request.greeting == "On") {
-      var elements = document.querySelectorAll("span, p, li, br, h1, h2, h3, h4, b");
-      for(var i = 0; i < elements.length; i++) {
-         var current = elements[i];
-         var children = current.childNodes;
-         if(isAlphanumeric(current.textContent)){
-           translates(current.textContent, (items["fr-lang"]+"|"+items["to-lang"]), current, children, items["apertium-api-url"])
+  uri = browser.storage.sync.get("apertiumapiuri")
+  from = browser.storage.sync.get("fromlang")
+  to = browser.storage.sync.get("tolang")
+  to.then((res)=>{
+    from.then((res_one)=>{
+      uri.then((res_two)=>{
+        var elements = document.querySelectorAll("span, p, li, br, h1, h2, h3, h4, b, legend");
+        for(var i = 0; i < elements.length; i++) {
+           var current = elements[i];
+           var children = current.childNodes;
+           if(isAlphanumeric(current.textContent)){
+             translates(current.textContent, (res_one.fromlang+"|"+res.tolang), current, children, 'https://www.apertium.org/apy/')
+           }
          }
-       }
-    }
+      })
+    })
   })
 })
 

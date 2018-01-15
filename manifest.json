@@ -3,7 +3,12 @@
   "version": "0.1.2",
   "manifest_version":2,
   "description": "Apertium Translate.",
-
+  "applications": {
+      "gecko": {
+        "id": "geriaoueg@apertium.org",
+        "strict_min_version": "53.0"
+      }
+  },
   "options_ui": {
     "page": "../html/options.html"
   },
@@ -17,12 +22,14 @@
   ],
   "web_accessible_resources": [
     "js/contentscript.js",
-    "html/toolbar.html",
     "css/basic.css"
   ],
+
   "permissions": [
     "storage"
   ],
+  
+
   "icons": {"128": "apertium128.png" },
 
   "browser_action": {
