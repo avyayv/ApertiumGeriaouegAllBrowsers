@@ -85,52 +85,62 @@ function mouse_hover() {
 
                 $(prev_txt).empty()
                 $(prev_txt).append(orig_text)
-
-                chrome.storage.sync.get(["apertium-api-url","fr-lang","to-lang"], function(items) {
-                    if (items["apertium-api-url"]) {
-                        if (items["fr-lang"] && items["to-lang"]) {
-                            var disp_txt = translate_text(items["apertium-api-url"], disp_txt_node, (items["fr-lang"]+"-"+items["to-lang"]))
+                uri = browser.storage.sync.get("apertiumapiuri")
+                from = browser.storage.sync.get("fromlang")
+                to = browser.storage.sync.get("tolang")
+                var disp_txt;
+                to.then((res)=>{
+                  from.then((res_one)=>{
+                    uri.then((res_two)=>{
+                        if (res_two.apertiumapiuri) {
+                            if (res_one.fromlang && res.tolang) {
+                                disp_txt = translate_text(res_two.apertiumapiuri, disp_txt_node, (res_one.fromlang+"-"+res.tolang))
+                            } else {
+                                //Globalize!!
+                                disp_txt = "Please click the dropdowns and reselect a pair."
+                            }
                         } else {
-                            //Globalize!!
-                            var disp_txt = "Please click the dropdowns and reselect a pair."
-                        }
-                    } else {
-                        if (items["fr-lang"] && items["to-lang"]) {
-                            var disp_txt = translate_text("http://beta.apertium.org/apy/", disp_txt_node, (items["fr-lang"]+"-"+items["to-lang"]))
-                        } else {
-                            //Globalize!!
-                            var disp_txt = "Please click the dropdowns and reselect a pair."
-                        }
-                    }
+                            if (res_one.fromlang && res.tolang) {
+                                disp_txt = translate_text("http://beta.apertium.org/apy/", disp_txt_node, (res_one.fromlang+"-"+res.tolang))
 
-                    if(shouldShow(disp_txt)) {
-                        $(".apertium-popup-translate-text").append(disp_txt)
-                        $(".apertium-popup-translate").css("display","table")
-                        var y_offset = 15
-                        if ((curr_ev.pageY - window.pageYOffset + 40 + $(".apertium-popup-translate-text").outerHeight()) > $(window).height()) {
-                            y_offset = -40
+                            } else {
+                                //Globalize!!
+                                disp_txt = "Please click the dropdowns and reselect a pair."
+                            }
                         }
-
-                        var x_offset = 20
-
-                        if ((curr_ev.pageX + 70 + $(".apertium-popup-translate-text").outerWidth()) > $(window).width()) {
-                            x_offset = -$(".apertium-popup-translate-text").outerWidth() + 20 - 60
+                        if(disp_txt == undefined){
+                          disp_txt = "Oops... Something seems to have gone wrong with the API"
                         }
+                        if(shouldShow(disp_txt)) {
+                            $(".apertium-popup-translate-text").append(disp_txt)
+                            $(".apertium-popup-translate").css("display","table")
+                            var y_offset = 15
+                            if ((curr_ev.pageY - window.pageYOffset + 40 + $(".apertium-popup-translate-text").outerHeight()) > $(window).height()) {
+                                y_offset = -40
+                            }
 
-                        if ((curr_ev.pageX + x_offset) < 0) {
-                            $(".apertium-popup-translate").css("left","5px")
-                        } else {
-                            $(".apertium-popup-translate").css("left",((curr_ev.pageX + x_offset).toString() + "px"))
+                            var x_offset = 20
+
+                            if ((curr_ev.pageX + 70 + $(".apertium-popup-translate-text").outerWidth()) > $(window).width()) {
+                                x_offset = -$(".apertium-popup-translate-text").outerWidth() + 20 - 60
+                            }
+
+                            if ((curr_ev.pageX + x_offset) < 0) {
+                                $(".apertium-popup-translate").css("left","5px")
+                            } else {
+                                $(".apertium-popup-translate").css("left",((curr_ev.pageX + x_offset).toString() + "px"))
+                            }
+
+                            if ((curr_ev.pageY + y_offset) < 0) {
+                                $(".apertium-popup-translate").css("top","5px")
+                            } else {
+                                $(".apertium-popup-translate").css("top",((curr_ev.pageY + y_offset).toString() + "px"))
+                            }
                         }
+                      })
+                    })
+                  })
 
-                        if ((curr_ev.pageY + y_offset) < 0) {
-                            $(".apertium-popup-translate").css("top","5px")
-                        } else {
-                            $(".apertium-popup-translate").css("top",((curr_ev.pageY + y_offset).toString() + "px"))
-                        }
-                    }
-
-                });
                 // disp_txt = XRegExp.replace(disp_txt, new XRegExp("\\P{L}+", "g"), "")
             } else {
                 $(nodes).unwrap();
@@ -174,9 +184,10 @@ function translate_text(apy_url, txt_node, lang_pair) {
       var xmlHttp = new XMLHttpRequest();
       xmlHttp.open( "GET", encodeURI(reqUrl), true );
       xmlHttp.send(null);
-      xmlHttp.onload = function (e) {
+      xmlHttp.onreadystatechange = function (e) {
+
         if (xmlHttp.readyState === 4) {
-          if (xmlHttp.status === 200) {
+          if (xmlHttp.status === 400) {
             var lang_arr = JSON.parse(xmlHttp.responseText);
             var first_time = true
             //Globalize!!
@@ -238,6 +249,7 @@ function translate_text(apy_url, txt_node, lang_pair) {
                 })
 
             }
+
             return (translated_txt + "</ul>")
           }
         }
@@ -310,6 +322,7 @@ function actualEntry(string) {
 
 function shouldShow(string) {
     return XRegExp.test(string.trim(), XRegExp("\\p{L}"))
+    //return true
 }
 
 function translates(word, lang_pair, textContent, children, url){
