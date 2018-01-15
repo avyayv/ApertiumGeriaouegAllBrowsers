@@ -26,9 +26,11 @@
   ],
 
   "permissions": [
-    "storage"
+    "storage",
+    "http://*/",
+    "https://*/"
   ],
-  
+
 
   "icons": {"128": "apertium128.png" },
 
