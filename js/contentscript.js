@@ -365,7 +365,11 @@ chrome.runtime.onMessage.addListener(function(request){
            var current = elements[i];
            var children = current.childNodes;
            if(isAlphanumeric(current.textContent)){
-             translates(current.textContent, (res_one.fromlang+"|"+res.tolang), current, children, res_two.apertiumapiuri)
+             if(res_two.apertiumapiuri != null){
+               translates(current.textContent, (res_one.fromlang+"|"+res.tolang), current, children, res_two.apertiumapiuri)
+             }else{
+               translates(current.textContent, (res_one.fromlang+"|"+res.tolang), current, children, "http://beta.apertium.org")
+             }
            }
          }
       })
