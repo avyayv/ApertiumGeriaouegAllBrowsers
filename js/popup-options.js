@@ -145,7 +145,7 @@ function download_languages() {
     var apertium_api_uri = browser.storage.sync.get('apertiumapiuri')
     apertium_api_uri.then((res) => {
       if (res.apertiumapiuri) {
-          console.log(res.apertiumapiuri)
+
           download_langs_with_uri(res.apertiumapiuri)
       } else {
           download_langs_with_uri("http://apy.projectjj.com/")
@@ -157,6 +157,7 @@ function download_languages() {
 function enable_disable(str) {
   if(str == "enable-button"){
     var apertium_enabled = browser.storage.sync.get('apertiumenabled')
+
 
     apertium_enabled.then((res)=>{
       if(res.apertiumenabled == "On") {
@@ -174,15 +175,15 @@ function enable_disable(str) {
 
     // });
   }else{
-    var apertium_api_uri = browser.storage.sync.get("pagetranslationenabled")
+    var apertium_api_uri = browser.storage.sync.get("apertiumenabled")
     apertium_api_uri.then((res) => {
-      if(res.pagetranslationenabled == "On") {
+      if(res.apertiumenabled == "On") {
           $("#"+str).html("Off")
-          browser.storage.sync.set({pagetranslationenabled: $("#"+str).html()}
+          browser.storage.sync.set({apertiumenabled: $("#"+str).html()}
           );
       } else {
           $("#"+str).html("On")
-          browser.storage.sync.set({pagetranslationenabled: $("#"+str).html()}
+          browser.storage.sync.set({apertiumenabled: $("#"+str).html()}
           );
       }
     })
@@ -205,13 +206,13 @@ function set_btn_txt(str) {
       })
 
     }else{
-      var page_translation_enabled = browser.storage.sync.get("pagetranslationenabled")
+      var page_translation_enabled = browser.storage.sync.get("apertiumenabled")
       page_translation_enabled.then((res) => {
-        if(res.pagetranslationenabled) {
+        if(res.apertiumenabled) {
             $("#"+str).html(res)
         } else {
             $("#"+str).html("Off")
-            browser.storage.sync.set({pagetranslationenabled: $("#"+str).html()});
+            browser.storage.sync.set({apertiumenabled: $("#"+str).html()});
         }
         if ($("#"+str).html() == "On") {
             $("#"+str).addClass('active')
@@ -252,7 +253,6 @@ $("#to-lang").change(function() {
 $("#enable-button").click( function() {
   enable_disable("enable-button")
 });
-
 function handleResponse(message) {
   console.log(`Message from the background script:  ${message.response}`);
 }
@@ -261,31 +261,19 @@ function handleError(error) {
   console.log(error);
 }
 
-// $("#translate-page-button").click(function () {
-//
-//   page_translation_enabled.then((res) => {
-//     browser.runtime.sendMessage({"greeting": e.target.href});
-//     var sending = browser.runtime.sendMessage({
-//       greeting: $("#translate-page-button").html()
-//     });
-//     var sending_two = browser.runtime.sendMessage({
-//       greeting: res.pagetranslationenabled
-//     });
-//   })
-// });
+
 $("#translate-page-button").click(function () {
-  var page_translation_enabled = browser.storage.sync.get("pagetranslationenabled")
-  page_translation_enabled.then((res) => {
+
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         chrome.tabs.sendMessage(tabs[0].id, {greeting: $("#translate-page-button").html()}, function(response) {
         });
     });
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, {greeting: res.pagetranslationenabled}, function(response) {
+        chrome.tabs.sendMessage(tabs[0].id, {greeting: res.apertiumenabled}, function(response) {
 
         });
     });
-  })
+
 });
 
 
