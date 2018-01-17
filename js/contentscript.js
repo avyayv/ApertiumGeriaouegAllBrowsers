@@ -95,6 +95,7 @@ function mouse_hover() {
                         if (res_two.apertiumapiuri) {
                             if (res_one.fromlang && res.tolang) {
                                 disp_txt = translate_text(res_two.apertiumapiuri, disp_txt_node, (res_one.fromlang+"-"+res.tolang))
+                                console.log(disp_txt)
                             } else {
                                 //Globalize!!
                                 disp_txt = "Please click the dropdowns and reselect a pair."
@@ -182,79 +183,77 @@ function translate_text(apy_url, txt_node, lang_pair) {
       var reqUrl = encodeSemicolon(URI.decode(URI(apy_url) + URI("perWord").addQuery("lang",lang_pair).addQuery("modes","biltrans").addQuery("q",txt)))
 
       var xmlHttp = new XMLHttpRequest();
-      xmlHttp.open( "GET", encodeURI(reqUrl), true );
+      console.log(reqUrl)
+      xmlHttp.open( "GET", encodeURI(reqUrl), false );
       xmlHttp.send(null);
-      xmlHttp.onreadystatechange = function (e) {
+      var lang_arr = JSON.parse(xmlHttp.responseText);
+      var first_time = true
+      //Globalize!!
+      var translated_txt = "Sorry, we cannot translate \"" + desired_txt + "\""
+      var translate_dict = {}
+      $.each(lang_arr, function(inx, trans_obj) {
+          if(trans_obj.input == desired_txt) {
+              if(ctx_pos == 1) {
+                  $.each(trans_obj.biltrans, function(inx, btransobj) {
+                      if(actualEntry(htmlEscape(btransobj))){
+                          word_tags = getTags(btransobj)
 
-        if (xmlHttp.readyState === 4) {
-          if (xmlHttp.status === 400) {
-            var lang_arr = JSON.parse(xmlHttp.responseText);
-            var first_time = true
-            //Globalize!!
-            var translated_txt = "Sorry, we cannot translate \"" + desired_txt + "\""
-            var translate_dict = {}
-            $.each(lang_arr, function(inx, trans_obj) {
-                if(trans_obj.input == desired_txt) {
-                    if(ctx_pos == 1) {
-                        $.each(trans_obj.biltrans, function(inx, btransobj) {
-                            if(actualEntry(htmlEscape(btransobj))){
-                                word_tags = getTags(btransobj)
-
-                                if(stripTags(htmlEscape(btransobj)) in translate_dict) {
-                                    translate_dict[stripTags(htmlEscape(btransobj))].push(word_tags)
-                                } else {
-                                    translate_dict[stripTags(htmlEscape(btransobj))] = [word_tags]
-                                }
-                            }
-                        })
-                        return false;
-                    } else {
-                        ctx_pos = ctx_pos - 1;
-                    }
-                }
-            });
-
-            if ((Object.keys(translate_dict).length) > 0) {
-                $.each(Object.keys(translate_dict), function(inx_main, trans_dict_key){
-                    $.each(translate_dict[trans_dict_key], function(inx, trans_dict_vals) {
-                        var tags_str = ""
-                        $.each(trans_dict_vals, function(inx, word_tag) {
-                            tags_str += word_tag
-                            if (inx < (trans_dict_vals.length - 1)) {
-                                tags_str += ", "
-                            }
-                        })
-
-                        if((inx_main == 0) && (inx == 0)) {
-                            translated_txt = "<b>" + desired_txt + "</b><ul><li>" + trans_dict_key
-                            translated_txt += "<ul> <li>" + tags_str
-                        } else if (inx == 0) {
-                            translated_txt += "<li>" + trans_dict_key
-                            translated_txt += "<ul> <li>" + tags_str
-                        }
-
-                        if(tags_str != "") {
-                            if(inx != 0) {
-                                translated_txt += "<li>" + tags_str
-                            }
-
-                            if(inx == translate_dict[trans_dict_key].length-1) {
-                                translated_txt += "</ul>"
-                            }
-
-                        } else if (inx == translate_dict[trans_dict_key].length-1){
-                            translated_txt += "</ul>"
-                        }
-                    })
-                })
-
-            }
-
-            return (translated_txt + "</ul>")
+                          if(stripTags(htmlEscape(btransobj)) in translate_dict) {
+                              translate_dict[stripTags(htmlEscape(btransobj))].push(word_tags)
+                          } else {
+                              translate_dict[stripTags(htmlEscape(btransobj))] = [word_tags]
+                          }
+                      }
+                  })
+                  return false;
+              } else {
+                  ctx_pos = ctx_pos - 1;
+              }
           }
-        }
+      });
+
+      if ((Object.keys(translate_dict).length) > 0) {
+          $.each(Object.keys(translate_dict), function(inx_main, trans_dict_key){
+              $.each(translate_dict[trans_dict_key], function(inx, trans_dict_vals) {
+                  var tags_str = ""
+                  $.each(trans_dict_vals, function(inx, word_tag) {
+                      tags_str += word_tag
+                      if (inx < (trans_dict_vals.length - 1)) {
+                          tags_str += ", "
+                      }
+                  })
+
+                  if((inx_main == 0) && (inx == 0)) {
+                      translated_txt = "<b>" + desired_txt + "</b><ul><li>" + trans_dict_key
+                      translated_txt += "<ul> <li>" + tags_str
+                  } else if (inx == 0) {
+                      translated_txt += "<li>" + trans_dict_key
+                      translated_txt += "<ul> <li>" + tags_str
+                  }
+
+                  if(tags_str != "") {
+                      if(inx != 0) {
+                          translated_txt += "<li>" + tags_str
+                      }
+
+                      if(inx == translate_dict[trans_dict_key].length-1) {
+                          translated_txt += "</ul>"
+                      }
+
+                  } else if (inx == translate_dict[trans_dict_key].length-1){
+                      translated_txt += "</ul>"
+                  }
+              })
+          })
+
       }
+
+      return (translated_txt + "</ul>")
+
+
+
     }catch(err){
+      console.log(err)
       console.log("It looks like an end point isn't working or the link is incorrect.")
     }
 }
