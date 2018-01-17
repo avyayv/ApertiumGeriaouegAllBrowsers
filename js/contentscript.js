@@ -33,131 +33,120 @@ function strip_leading_non_word_chars(s) {
 }
 
 $(document).mousemove(function(event) {
-    var enabled = browser.storage.sync.get('apertiumenabled')
-    enabled.then((res){
-      if(res.apertiumenabled == "On"){
-        if ((curr_ev) && (real_movement(prev_x, prev_y, event.pageX - window.pageXOffset, curr_ev.pageY - window.pageYOffset))) {
-            $(".apertium-popup-translate").css("display","none")
-            should_update = true
-        }
-        curr_ev = event
-      }
-    })
-
+    if ((curr_ev) && (real_movement(prev_x, prev_y, event.pageX - window.pageXOffset, curr_ev.pageY - window.pageYOffset))) {
+        $(".apertium-popup-translate").css("display","none")
+        should_update = true
+    }
+    curr_ev = event
 });
 
 function mouse_hover() {
-    var enabled = browser.storage.sync.get('apertiumenabled')
-    enabled.then((res){
-      if(res.apertiumenabled == "On"){
-        if (curr_ev) {
-            prev_x = curr_ev.pageX - window.pageXOffset
-            prev_y = curr_ev.pageY - window.pageYOffset
+    if (curr_ev) {
+        prev_x = curr_ev.pageX - window.pageXOffset
+        prev_y = curr_ev.pageY - window.pageYOffset
 
-            var elem = $(document.elementFromPoint((curr_ev.pageX - window.pageXOffset), curr_ev.pageY - window.pageYOffset));
+        var elem = $(document.elementFromPoint((curr_ev.pageX - window.pageXOffset), curr_ev.pageY - window.pageYOffset));
 
-            var nodes = elem.contents().filter(function(){
-                return ((this.nodeType == Node.TEXT_NODE) && !($(this).text().match(/\A\s*\z/)))
-            });
+        var nodes = elem.contents().filter(function(){
+            return ((this.nodeType == Node.TEXT_NODE) && !($(this).text().match(/\A\s*\z/)))
+        });
 
-            $(nodes).wrap('<apertiumproblocation />');
+        $(nodes).wrap('<apertiumproblocation />');
 
-            if (nodes.length == 0) {
+        if (nodes.length == 0) {
+            $(nodes).unwrap();
+        } else {
+            var text = document.elementFromPoint((curr_ev.pageX - window.pageXOffset), curr_ev.pageY - window.pageYOffset);
+            if (text.nodeName == 'APERTIUMPROBLOCATION') {
                 $(nodes).unwrap();
-            } else {
-                var text = document.elementFromPoint((curr_ev.pageX - window.pageXOffset), curr_ev.pageY - window.pageYOffset);
-                if (text.nodeName == 'APERTIUMPROBLOCATION') {
-                    $(nodes).unwrap();
-                    var txt = document.elementFromPoint((curr_ev.pageX - window.pageXOffset), curr_ev.pageY - window.pageYOffset);
-                    var prev_txt = document.elementFromPoint((curr_ev.pageX - window.pageXOffset), curr_ev.pageY - window.pageYOffset);
-                    var orig_text = $(txt).html();
+                var txt = document.elementFromPoint((curr_ev.pageX - window.pageXOffset), curr_ev.pageY - window.pageYOffset);
+                var prev_txt = document.elementFromPoint((curr_ev.pageX - window.pageXOffset), curr_ev.pageY - window.pageYOffset);
+                var orig_text = $(txt).html();
 
-                    txt = $(txt).contents().filter(function(){
-                        return this.nodeType == Node.TEXT_NODE && !($(this).text().match(/\A\s*\z/))
+                txt = $(txt).contents().filter(function(){
+                    return this.nodeType == Node.TEXT_NODE && !($(this).text().match(/\A\s*\z/))
+                });
+
+                $.each(txt, function(inx, words) {
+                    var wordarr = $(words).text().split(/([\s-;.])/g)
+                    var dest_str = ""
+                    $.each(wordarr, function(inx, atext) {
+                        dest_str = dest_str + "<apertiumword>" + htmlEscape(atext) + "</apertiumword>"
                     });
+                    $(words).replaceWith(dest_str)
 
-                    $.each(txt, function(inx, words) {
-                        var wordarr = $(words).text().split(/([\s-;.])/g)
-                        var dest_str = ""
-                        $.each(wordarr, function(inx, atext) {
-                            dest_str = dest_str + "<apertiumword>" + htmlEscape(atext) + "</apertiumword>"
-                        });
-                        $(words).replaceWith(dest_str)
-
-                    });
+                });
 
 
 
-                    $(".apertium-popup-translate-text").empty()
+                $(".apertium-popup-translate-text").empty()
 
-                    var disp_txt_node = $(document.elementFromPoint((curr_ev.pageX - window.pageXOffset), curr_ev.pageY - window.pageYOffset))
+                var disp_txt_node = $(document.elementFromPoint((curr_ev.pageX - window.pageXOffset), curr_ev.pageY - window.pageYOffset))
 
-                    $(prev_txt).empty()
-                    $(prev_txt).append(orig_text)
-                    uri = browser.storage.sync.get("apertiumapiuri")
-                    from = browser.storage.sync.get("fromlang")
-                    to = browser.storage.sync.get("tolang")
-                    var disp_txt;
-                    to.then((res)=>{
-                      from.then((res_one)=>{
-                        uri.then((res_two)=>{
-                            if (res_two.apertiumapiuri) {
-                                if (res_one.fromlang && res.tolang) {
-                                    disp_txt = translate_text(res_two.apertiumapiuri, disp_txt_node, (res_one.fromlang+"-"+res.tolang))
-                                    console.log(disp_txt)
-                                } else {
-                                    //Globalize!!
-                                    disp_txt = "Please click the dropdowns and reselect a pair."
-                                }
+                $(prev_txt).empty()
+                $(prev_txt).append(orig_text)
+                uri = browser.storage.sync.get("apertiumapiuri")
+                from = browser.storage.sync.get("fromlang")
+                to = browser.storage.sync.get("tolang")
+                var disp_txt;
+                to.then((res)=>{
+                  from.then((res_one)=>{
+                    uri.then((res_two)=>{
+                        if (res_two.apertiumapiuri) {
+                            if (res_one.fromlang && res.tolang) {
+                                disp_txt = translate_text(res_two.apertiumapiuri, disp_txt_node, (res_one.fromlang+"-"+res.tolang))
+                                console.log(disp_txt)
                             } else {
-                                if (res_one.fromlang && res.tolang) {
-                                    disp_txt = translate_text("http://beta.apertium.org/apy/", disp_txt_node, (res_one.fromlang+"-"+res.tolang))
-
-                                } else {
-                                    //Globalize!!
-                                    disp_txt = "Please click the dropdowns and reselect a pair."
-                                }
+                                //Globalize!!
+                                disp_txt = "Please click the dropdowns and reselect a pair."
                             }
-                            if(disp_txt == undefined){
-                              disp_txt = "Oops... Something seems to have gone wrong with the API"
+                        } else {
+                            if (res_one.fromlang && res.tolang) {
+                                disp_txt = translate_text("http://beta.apertium.org/apy/", disp_txt_node, (res_one.fromlang+"-"+res.tolang))
+
+                            } else {
+                                //Globalize!!
+                                disp_txt = "Please click the dropdowns and reselect a pair."
                             }
-                            if(shouldShow(disp_txt)) {
-                                $(".apertium-popup-translate-text").append(disp_txt)
-                                $(".apertium-popup-translate").css("display","table")
-                                var y_offset = 15
-                                if ((curr_ev.pageY - window.pageYOffset + 40 + $(".apertium-popup-translate-text").outerHeight()) > $(window).height()) {
-                                    y_offset = -40
-                                }
-
-                                var x_offset = 20
-
-                                if ((curr_ev.pageX + 70 + $(".apertium-popup-translate-text").outerWidth()) > $(window).width()) {
-                                    x_offset = -$(".apertium-popup-translate-text").outerWidth() + 20 - 60
-                                }
-
-                                if ((curr_ev.pageX + x_offset) < 0) {
-                                    $(".apertium-popup-translate").css("left","5px")
-                                } else {
-                                    $(".apertium-popup-translate").css("left",((curr_ev.pageX + x_offset).toString() + "px"))
-                                }
-
-                                if ((curr_ev.pageY + y_offset) < 0) {
-                                    $(".apertium-popup-translate").css("top","5px")
-                                } else {
-                                    $(".apertium-popup-translate").css("top",((curr_ev.pageY + y_offset).toString() + "px"))
-                                }
+                        }
+                        if(disp_txt == undefined){
+                          disp_txt = "Oops... Something seems to have gone wrong with the API"
+                        }
+                        if(shouldShow(disp_txt)) {
+                            $(".apertium-popup-translate-text").append(disp_txt)
+                            $(".apertium-popup-translate").css("display","table")
+                            var y_offset = 15
+                            if ((curr_ev.pageY - window.pageYOffset + 40 + $(".apertium-popup-translate-text").outerHeight()) > $(window).height()) {
+                                y_offset = -40
                             }
-                          })
-                        })
+
+                            var x_offset = 20
+
+                            if ((curr_ev.pageX + 70 + $(".apertium-popup-translate-text").outerWidth()) > $(window).width()) {
+                                x_offset = -$(".apertium-popup-translate-text").outerWidth() + 20 - 60
+                            }
+
+                            if ((curr_ev.pageX + x_offset) < 0) {
+                                $(".apertium-popup-translate").css("left","5px")
+                            } else {
+                                $(".apertium-popup-translate").css("left",((curr_ev.pageX + x_offset).toString() + "px"))
+                            }
+
+                            if ((curr_ev.pageY + y_offset) < 0) {
+                                $(".apertium-popup-translate").css("top","5px")
+                            } else {
+                                $(".apertium-popup-translate").css("top",((curr_ev.pageY + y_offset).toString() + "px"))
+                            }
+                        }
                       })
+                    })
+                  })
 
-                    // disp_txt = XRegExp.replace(disp_txt, new XRegExp("\\P{L}+", "g"), "")
-                } else {
-                    $(nodes).unwrap();
-                }
+                // disp_txt = XRegExp.replace(disp_txt, new XRegExp("\\P{L}+", "g"), "")
+            } else {
+                $(nodes).unwrap();
             }
         }
-      })
     }
 }
 
@@ -194,9 +183,9 @@ function translate_text(apy_url, txt_node, lang_pair) {
       var reqUrl = encodeSemicolon(URI.decode(URI(apy_url) + URI("perWord").addQuery("lang",lang_pair).addQuery("modes","biltrans").addQuery("q",txt)))
 
       var xmlHttp = new XMLHttpRequest();
-      console.log(reqUrl)
       xmlHttp.open( "GET", encodeURI(reqUrl), false );
       xmlHttp.send(null);
+
       var lang_arr = JSON.parse(xmlHttp.responseText);
       var first_time = true
       //Globalize!!
@@ -336,33 +325,29 @@ function shouldShow(string) {
 }
 
 function translates(word, lang_pair, textContent, children, url){
-  var enabled = browser.storage.sync.get('apertiumenabled')
-  enabled.then((res){
-    if(res.apertiumenabled == "On"){
-      try {
-        var reqUrl = encodeSemicolon(URI.decode(URI(url) + URI("translate").addQuery("langpair",lang_pair).addQuery("q",word)))
-        var xmlHttp = new XMLHttpRequest();
 
-        xmlHttp.onreadystatechange = function (e) {
-          if (xmlHttp.readyState === 4) {
-            if (xmlHttp.status === 200) {
-              var lang_arr = JSON.parse(xmlHttp.responseText);
-              textContent.textContent = textContent.textContent.replace(word, lang_arr["responseData"]["translatedText"])
-            } else {
-              console.error(xmlHttp.statusText);
-            }
-          }
-        };
+  try {
+    var reqUrl = encodeSemicolon(URI.decode(URI(url) + URI("translate").addQuery("langpair",lang_pair).addQuery("q",word)))
+    var xmlHttp = new XMLHttpRequest();
 
-        xmlHttp.open("GET", encodeURI(reqUrl), true);
-
-        xmlHttp.send()
-
-      } catch(e){
-        console.log(e)
+    xmlHttp.onreadystatechange = function (e) {
+      if (xmlHttp.readyState === 4) {
+        if (xmlHttp.status === 200) {
+          var lang_arr = JSON.parse(xmlHttp.responseText);
+          textContent.textContent = textContent.textContent.replace(word, lang_arr["responseData"]["translatedText"])
+        } else {
+          console.error(xmlHttp.statusText);
+        }
       }
-    }
-  })
+    };
+
+    xmlHttp.open("GET", encodeURI(reqUrl), true);
+
+    xmlHttp.send()
+
+  } catch(e){
+    console.log(e)
+  }
 }
 
 
