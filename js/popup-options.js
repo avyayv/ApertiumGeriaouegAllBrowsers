@@ -158,7 +158,6 @@ function enable_disable(str) {
   if(str == "enable-button"){
     var apertium_enabled = browser.storage.sync.get('apertiumenabled')
 
-
     apertium_enabled.then((res)=>{
       if(res.apertiumenabled == "On") {
           $("#"+str).html("Off")
@@ -253,6 +252,7 @@ $("#to-lang").change(function() {
 $("#enable-button").click( function() {
   enable_disable("enable-button")
 });
+
 function handleResponse(message) {
   console.log(`Message from the background script:  ${message.response}`);
 }
